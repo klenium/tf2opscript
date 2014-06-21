@@ -404,7 +404,6 @@ $(function()
 		$("#script_settings").click(function()
 		{
 			var html = '';
-			html += '<a href="http://userscripts.org/scripts/show/486141" target="_blank">Userscripts.org page</a><br />';
 			html += '<a href="http://forums.backpack.tf/index.php?/topic/10248-script-for-tf2outpostcom/" target="_blank">Suggestions, bug reports</a><br /><br />';
 			html += '<button class="button" type="button" id="update">Update prices now</button><br /><br />';
 			html += 'Your backpack.tf API key: <input type="text" class="input" value="'+localStorage.apikey+'" /> <a href="http://backpack.tf/api/register/" target="_blank" id="changekey">Change</a><br />';
