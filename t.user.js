@@ -3,9 +3,9 @@
 // @author kléni
 // @include http://*.tf2outpost.com/*
 // @require http://code.jquery.com/jquery-2.1.0.min.js
-// @updateURL http://userscripts.org/scripts/source/486141.meta.js
+// @updateURL https://raw.githubusercontent.com/klenium/tf2opscript/master/t.user.js
 // @grant GM_xmlhttpRequest
-// @version 1.1
+// @version 1.2
 // ==/UserScript==
 
 var checkReady = function(check, callback)
@@ -63,18 +63,31 @@ var update = function()
 	else
 		process();
 };
-var process = function()
+function setcookie(name, value, time)
 {
-	//something went wrong... wait 5 minutes
-	var exists = false;
-	var ca = document.cookie.split(';');
-	for (var i = 0; i < ca.length && !exists; i++)
+	var expires = "";
+	if (time)
+	{
+		var date = new Date();
+		date.setTime(date.getTime()+time);
+		var expires = "; expires="+date.toGMTString();
+	}
+	document.cookie = name+"="+value+expires+"; path=/";
+}
+function getcookie(name)
+{
+	var ca = document.cookie.split(";");
+	for (var i = 0; i < ca.length; i++)
 	{
 		var c = ca[i].trim();
-		if (c.indexOf("wait=") == 0)
-			exists = true;
+		if (c.indexOf(name+"=") == 0)
+			return c.substring(name.length+1, c.length);
 	}
-	if (exists)
+	return null;
+}
+var process = function()
+{
+	if (getcookie("error"))
 		return;
 	GM_xmlhttpRequest({
 		method: "GET",
@@ -84,9 +97,9 @@ var process = function()
 			try
 			{
 				var data = JSON.parse(e.responseText);
-				if (data.message)
-					throw data.message;
-				if (!data && !data.response.success)
+				if (data.response.message)
+					throw data.response.message;
+				if (!data)
 					return;
 				var n = {},
 					ref = data.response.items["Refined Metal"]["prices"][6]["Tradable"]["Craftable"][0],
@@ -185,7 +198,6 @@ var process = function()
 			{
 				var html = "Couldn't update the prices, because:<br />"+error;
 				zemnmodal.make(html);
-				console.info(e);
 				if (error == "API key does not exist.")
 				{
 					//getting a new key
@@ -198,9 +210,19 @@ var process = function()
 				}
 				else
 				{
-					var d = new Date();
-					d.setTime(d.getTime()+5*60*1000);
-					document.cookie = "wait=1; expires="+d.toGMTString();
+					var c = parseInt(getcookie("error"));
+					var time = 30000;
+					if (c)
+					{
+						if (btoa(error) == getcookie("errorvalue"))
+							c++;
+						else
+							c = 1;
+						if (c >= 3)
+							time = 36000000;
+					}
+					setcookie("error", c, time);
+					setcookie("errorvalue", btoa(error), 36000000);
 				}
 			}
 		}
@@ -292,6 +314,8 @@ $(function()
 	}
 	if (localStorage.lastupdate !== undefined && parseInt(localStorage.lastupdate) < ((new Date()).getTime()/1000)-(60*60*24*(parseFloat(localStorage.update) || 1)))
 		update();
+	if (/backpack/.test(location.href) && localStorage.links === undefined)
+		$(".navigation_bar .left").append('<li><a href="http://backpack.tf/profiles/'+$(".user_info").html().split("</span> ")[1]+'">BP.TF Backpack</a></li>');
 	checkReady(function()
 	{
 		//for invertories and new trade page
@@ -315,8 +339,8 @@ $(function()
 		$("head").append('<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">');
 		if (localStorage.links === undefined)
 		{
-			if (/(user|backpack)/.test(location.href))
-				$(".navigation_bar .left").append('<li><a href="http://backpack.tf/profiles/'+$(".user_info").html().split("</span> ")[1]+'" target="_blank">BP.TF Profile</a></li>');
+			if (/user/.test(location.href))
+				$(".navigation_bar .left").append('<li><a href="http://backpack.tf/u/'+$(".user_info").html().split("</span> ")[1]+'" target="_blank">BP.TF Profile</a></li>');
 			$(".item_summary").click(function()
 			{
 				checkReady(function()
@@ -372,7 +396,7 @@ $(function()
 							case "14": quality = "Collector's"; break;
 						}
 						var link = "http://backpack.tf/stats/"+quality+"/"+p[id[1]].name+"/"+craft+"/"+trade+(s == 0 ? "" : "/"+s);
-						$(".links").append('<li><a href="'+link+'" target="_blank"><span class="icon_trades"></span> Stats on BP.TF</a></li>');
+						$(".links").append('<li class="bptf"><a href="'+link+'" target="_blank"><span class="icon_trades"></span> Stats on BP.TF</a></li>');
 					}
 				});
 			});
@@ -579,7 +603,7 @@ $(function()
 			}
 			else if (i.attr("data-attributes"))
 				i.removeData("attributes").removeAttr("data-attributes");
-			//Unique Mann Co. Supply Crate Key doesn't have self-made price, but every other kind of key have... This is very logical. :D
+			//Self-made keys
 			if (id[1] == 5021 && id[2] == 9)
 				id[1] = 5081;
 			//crates
