@@ -2,10 +2,11 @@
 // @name Backpack.tf prices on Tf2outpost
 // @author kléni
 // @include http://*.tf2outpost.com/*
+// @include http://*.dotaoutpost.com/*
 // @require http://code.jquery.com/jquery-2.1.0.min.js
 // @updateURL https://raw.githubusercontent.com/klenium/tf2opscript/master/t.user.js
 // @grant GM_xmlhttpRequest
-// @version 1.2
+// @version 1.3
 // ==/UserScript==
 
 var checkReady = function(check, callback)
@@ -314,8 +315,8 @@ $(function()
 	}
 	if (localStorage.lastupdate !== undefined && parseInt(localStorage.lastupdate) < ((new Date()).getTime()/1000)-(60*60*24*(parseFloat(localStorage.update) || 1)))
 		update();
-	if (/backpack/.test(location.href) && localStorage.links === undefined)
-		$(".navigation_bar .left").append('<li><a href="http://backpack.tf/profiles/'+$(".user_info").html().split("</span> ")[1]+'">BP.TF Backpack</a></li>');
+	// if (/backpack/.test(location.href) && localStorage.links === undefined)
+		// $(".navigation_bar .left").append('<li><a href="http://backpack.tf/profiles/'+$(".user_info").html().split("</span> ")[1]+'">BP.TF Backpack</a></li>');
 	checkReady(function()
 	{
 		//for invertories and new trade page
@@ -339,8 +340,8 @@ $(function()
 		$("head").append('<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">');
 		if (localStorage.links === undefined)
 		{
-			if (/user/.test(location.href))
-				$(".navigation_bar .left").append('<li><a href="http://backpack.tf/u/'+$(".user_info").html().split("</span> ")[1]+'" target="_blank">BP.TF Profile</a></li>');
+			// if (/user/.test(location.href))
+				// $(".navigation_bar .left").append('<li><a href="http://backpack.tf/u/'+$(".user_info").html().split("</span> ")[1]+'" target="_blank">BP.TF Profile</a></li>');
 			$(".item_summary").click(function()
 			{
 				checkReady(function()
@@ -397,6 +398,8 @@ $(function()
 						}
 						var link = "http://backpack.tf/stats/"+quality+"/"+p[id[1]].name+"/"+craft+"/"+trade+(s == 0 ? "" : "/"+s);
 						$(".links").append('<li class="bptf"><a href="'+link+'" target="_blank"><span class="icon_trades"></span> Stats on BP.TF</a></li>');
+						link = "http://backpack.tf/item/"+$("#item_summary .grid .row:eq(1) .white").html();
+						$(".links").append('<li><a href="'+link+'" target="_blank"><span class="icon_search"></span> History on BP.TF</a></li>');
 					}
 				});
 			});
@@ -543,7 +546,8 @@ $(function()
 				TauntKills: 6051,
 				SubmergedEnemyKills: 6036,
 				BurningPlayerKills: 6053,
-				KillsDuringHalloween: 6033
+				KillsDuringHalloween: 6033,
+				KillsduringVictoryTime: 6041
 			});
 			for (var x = 0; x < a.length; x++)
 			{
@@ -578,8 +582,33 @@ $(function()
 					else if (attr[0] == "Halloween Spell")
 					{
 						var n = attr[1].replace(/[\s-\.']/g, "");
-						if (n != "Unknown" && spells[n] && p[spells[n]])
-							na.push("<span class='label'>Halloween Spell:</span> "+attr[1]+(tooltip ? " <span class='label'>("+pricetext(getprice(spells[n], 6, 1, 1, 0))+")</span>" : ''));
+						// if (n != "Unknown") Sould report it to Sneeza instead of blocking it lel
+						// {
+							if (spells[n] && p[spells[n]])
+								na.push("<span class='label'>Halloween Spell:</span> "+attr[1]+(tooltip ? " <span class='label'>("+pricetext(getprice(spells[n], 6, 1, 1, 0))+")</span>" : ''));
+						// }
+					}
+					//for unusual taunt, bp.tf uses 30xx IDs which I don't think op will support, and also they don't have background images yet
+					else if (attr[0] == "Effect")
+					{
+						if (i.attr("data-name").indexOf("Taunt:") != -1)
+						{
+							switch (attr[1])
+							{
+								case "Showstopper": effect = 3001; break;
+								case "Showstopper": effect = 3002; break;
+								case "Holy Grail": effect = 3003; break;
+								case "'72": effect = 3004; break;
+								case "Fountain of Delight": effect = 3005; break;
+								case "Screaming Tiger": effect = 3006; break;
+								case "Skill Gotten Gains": effect = 3007; break;
+								case "Midnight Whirlwind": effect = 3008; break;
+								case "Silver Cyclone": effect = 3009; break;
+								case "Mega Strike": effect = 3010; break;
+								default: effect = null;
+							}
+						}
+						na.push(a[x]);
 					}
 					else if (attr[0] != "Australium")
 					{
@@ -652,10 +681,15 @@ $(function()
 			var s = 0;
 			if (is_unusual)
 			{
-				var bg = i.css("background-image");
-				if (bg == "none")
-					return;
-				s = parseInt(bg.split("effects/")[1].split(".png")[0]);
+				if (typeof effect != "undefined" && effect != null)
+					s = effect;
+				else
+				{
+					var bg = i.css("background-image");
+					if (bg == "none")
+						return;
+					s = parseInt(bg.split("effects/")[1].split(".png")[0]);
+				}
 			}
 			if (i.find(".series_no").length)
 				s = parseInt(i.find(".series_no").html().substr(1));
@@ -672,9 +706,9 @@ $(function()
 				var item = p[id[1]][id[2]][trade][craft][s],
 					a = i.find("a.item_summary");
 				if (a.find("> *").eq(1).length)
-					a.find("> *").eq(1).before('<div class="equipped">'+pricetext(round(total, item[1], item[2], item[0], name == "Refined Metal"))+'</div>');
+					a.find("> *").eq(1).before('<div class="equipped">'+pricetext(round(total, item[1], item[2], name, item[0], name == "Refined Metal"))+'</div>');
 				else
-					a.append('<div class="equipped">'+pricetext(round(total, item[1], item[2], item[0], name == "Refined Metal"))+'</div>');
+					a.append('<div class="equipped">'+pricetext(round(total, item[1], item[2], name, item[0], name == "Refined Metal"))+'</div>');
 			}
 			if (localStorage.changes !== undefined)
 			{
@@ -682,14 +716,28 @@ $(function()
 					now = Math.round((new Date()).getTime()/1000),
 					last = parseInt(localStorage.lastupdate),
 					date = obj[3]+now-last;
-				if (obj[4] == 0)
-					var cn = "fa-white fa-certificate";
-				else if (obj[4] < 0)
-					var cn = "fa-red fa-arrow-down";
-				else
-					var cn = "fa-green fa-arrow-up";
 				if (date < 60*60*24*(parseFloat(localStorage.days) || 3))
+				{
+					if (obj[4] == 0) //Brad and Fiskie are so lazy :-c
+						var cn = "fa-white fa-certificate";
+					else if (obj[4] < 0)
+						var cn = "fa-red fa-arrow-down";
+					else
+					{
+						var b = getprice(143, 6, 1, 1, 0),
+							k = getprice(5021, 6, 1, 1, 0),
+							price = 0;
+						if (obj[2] == "bud")
+							price = ((obj[0]+obj[1])/2)*((b[0]+b[1])/2)*((k[0]+k[1])/2);
+						else if (obj[2] == "key")
+							price = ((obj[0]+obj[1])/2)*((k[0]+k[1])/2);
+						if (price == obj[4])
+							var cn = "fa-white fa-certificate";
+						else					
+							var cn = "fa-green fa-arrow-up";
+					}
 					i.find("a.item_summary").append('<div class="fa '+cn+'"></div>');
+				}
 			}
 		});
 	});
