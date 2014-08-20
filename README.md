@@ -10,6 +10,7 @@ Features:
 - Replaces the image of australium weapons to the image that bp.tf uses.
 - Shows latest changes.
 - Supports the v4 API.
+- On the new trade page, when you select an item, it adds the item's price to the notes box.
 
 Screenshots:
 http://imgur.com/a/pBR0f
