@@ -6,7 +6,7 @@
 // @require http://code.jquery.com/jquery-2.1.0.min.js
 // @updateURL https://raw.githubusercontent.com/klenium/tf2opscript/master/t.user.js
 // @grant GM_xmlhttpRequest
-// @version 1.4
+// @version 1.4.1
 // ==/UserScript==
 
 var checkReady = function(check, callback)
@@ -663,8 +663,8 @@ $(function()
 		return update();
 	if (localStorage.lastupdate !== undefined && parseInt(localStorage.lastupdate) < ((new Date()).getTime()/1000)-(60*60*24*(parseFloat(localStorage.update) || 1)))
 		update();
-	// if (/backpack/.test(location.href) && localStorage.links === undefined)
-		// $(".navigation_bar .left").append('<li><a href="http://backpack.tf/profiles/'+$(".user_info").html().split("</span> ")[1]+'">BP.TF Backpack</a></li>');
+	if (/backpack/.test(location.href) && localStorage.links === undefined)
+		$(".navigation_bar .left").append('<li><a href="http://www.tf2outpost.com/user/'+($(".user_info strong").html() == "—" ? $(".user_info").html().split("</span> ")[1] : $(".user_info strong").html())+'/resolve/backpack.tf">BP.TF Profile</a></li>');
 	checkReady(function()
 	{
 		//for invertories and new trade page
@@ -688,8 +688,8 @@ $(function()
 		$("head").append('<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">');
 		if (localStorage.links === undefined)
 		{
-			// if (/user/.test(location.href))
-				// $(".navigation_bar .left").append('<li><a href="http://backpack.tf/u/'+$(".user_info").html().split("</span> ")[1]+'" target="_blank">BP.TF Profile</a></li>');
+			if (/user/.test(location.href))
+				$(".navigation_bar .left").append('<li><a href="http://www.tf2outpost.com/user/'+($(".user_info strong").html() == "—" ? $(".user_info").html().split("</span> ")[1] : $(".user_info strong").html())+'/resolve/backpack.tf">BP.TF Profile</a></li>');
 			$(".item_summary").click(function()
 			{
 				checkReady(function()
