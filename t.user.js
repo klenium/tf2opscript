@@ -6,7 +6,7 @@
 // @require http://code.jquery.com/jquery-2.1.0.min.js
 // @updateURL https://raw.githubusercontent.com/klenium/tf2opscript/master/t.user.js
 // @grant GM_xmlhttpRequest
-// @version 1.4.1
+// @version 1.4.2
 // ==/UserScript==
 
 var checkReady = function(check, callback)
@@ -122,6 +122,8 @@ var process = function()
 				$.each(data.response.items, function(name)
 				{
 					var item = this;
+					if (!item.defindex)
+						return;
 					$.each(item.defindex, function()
 					{
 						var x = this;
